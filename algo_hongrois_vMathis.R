@@ -1,9 +1,21 @@
-library(clue)
+#install.packages("stringr", dependencies=TRUE)
+#install.packages("clue", dependencies=TRUE)
 
-TTFL1 <- read.csv("C:/Users/DI STASIO/Desktop/TTFL/TTFL.csv",sep=",",header = F)
-noms <- read.csv("C:/Users/DI STASIO/Desktop/TTFL/noms.csv",sep=",", header = F)
-dates <- read.csv("C:/Users/DI STASIO/Desktop/TTFL/calendrier.csv",sep=",",header = F)
-historique <- read.delim("C:/Users/DI STASIO/Desktop/TTFL/Histo Marco.txt",sep="\t", header = F, quote=)
+library(clue)
+library(stringr)
+
+config <- readLines("config.ini")
+
+for (i in 1 : length(config)){
+  if (str_sub(config[i], 2, str_length(config[i])-1) == "csv"){
+    PATH_TO_WRITE = str_split_fixed(config[i+1], " : ", 2)[1,2]
+  }
+}
+
+TTFL1 <- read.csv(str_c(PATH_TO_WRITE, "TTFL.csv"),sep=",",header = F)
+noms <- read.csv(str_c(PATH_TO_WRITE, "noms.csv"),sep=",", header = F)
+dates <- read.csv(str_c(PATH_TO_WRITE, "calendrier.csv"),sep=",",header = F)
+historique <- read.delim(str_c(PATH_TO_WRITE, "Histo Marco.txt"),sep="\t", header = F, quote=)
 
 historique <- historique[,c(1,2)]
 rownames(TTFL1)<-noms$V1
@@ -55,7 +67,7 @@ picks=noms[result,1]
 ## Check des meilleurs pour un soir choisi
 jour=1
 data <- TTFL1[order(TTFL1[jour],decreasing = T),]
-data[jour]
+#data[jour]
 
 ## Scores du deck prédit
 
@@ -65,9 +77,9 @@ for (i in 1:length(picks)){
   deck[i,2] <- TTFL1[rownames(TTFL1)==levels(picks)[c(picks[i])],i]
 }
 colnames(deck) <- c("Joueurs","Score prédit")
-deck
-
-write.csv2(deck,"C:/Users/DI STASIO/Desktop/TTFL/Deck_05-01-19.csv")
 
 
+
+write.table(deck, file = str_c(PATH_TO_WRITE, "DECK_", Sys.Date(), ".txt"))
+write.table(data[jour], file = str_c(PATH_TO_WRITE, "PREDICT_", Sys.Date(), ".txt"))
 
