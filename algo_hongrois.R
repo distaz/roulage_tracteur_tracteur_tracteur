@@ -13,6 +13,9 @@ for (i in 1 : length(config)){
   if (str_sub(config[i], 2, str_length(config[i])-1) == "joueur"){
     PLAYERS = str_split(str_split(config[i+1], " : ")[[1]][2], ", ")[[1]]
   }
+  if (str_sub(config[i], 2, str_length(config[i])-1) == "blesse"){
+    BLESS = str_split(str_split(config[i+1], " : ")[[1]][2], ", ")[[1]]
+  }
 }
 
 for (iter in 1 : length(PLAYERS)){
@@ -57,9 +60,10 @@ for (iter in 1 : length(PLAYERS)){
   
   
   #Joueurs blessés
-  blesses=c("LeBron James", "Anthony Davis", "Clint Capela")
-  for (i in 1:length(blesses)){
-    TTFL1[which(rownames(TTFL1)==blesses[i]),]=0
+  #blesses=c("LeBron James", "Anthony Davis", "Clint Capela")
+  for (i in 1:length(BLESS)){
+    print(BLESS[i])
+    TTFL1[which(rownames(TTFL1)==BLESS[i]),]=0
   }
   
   
@@ -86,5 +90,5 @@ for (iter in 1 : length(PLAYERS)){
   
   
   write.table(deck, file = str_c(PATH_TO_WRITE, PLAYERS[iter], "_DECK_", Sys.Date(), ".txt"))
-  write.table(data[jour], file = str_c(PATH_TO_WRITE, PLAYERS[iter], "PREDICT_", Sys.Date(), ".txt"))
+  write.table(data[jour], file = str_c(PATH_TO_WRITE, PLAYERS[iter], "_PREDICT_", Sys.Date(), ".txt"))
 }

@@ -82,6 +82,16 @@ Exemple de mes chemins :
 - Pour R : "C:\Program Files\R\R-3.5.2\bin"
 
 
+Une fois que les deux variables d'environnement sont ajoutés, vous pouvez paramétrer votre lancement via le fichier de config.
+
+Il contient 3 parties :
+ - [csv] : l'adresse du répertoire ou se trouve les fichier "Histo XXX.txt" (Les fichiers en sortie seront écrit dans ce même répertoire).
+ - [joueur] : la liste des joueurs pour qui vous voulez lancer l'algo (Il faut que pour chaque joueur vous ayez son historique enregistrer sous la forme "Histo XXX.txt".
+ - [blesse] : La liste des bléssés sous la forme "Aaa Bbb, Ccc Ddd"
+ 
+ Une fois que ce fichier est configuré. Double-clic sur le fichier : lanceur.bat
+
+
 
 
 

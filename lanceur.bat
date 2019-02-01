@@ -1,4 +1,6 @@
-python -m pip install -r requirements.txt
+if not exist ".inst" python -m pip install -r requirements.txt
+if not exist ".inst" echo "INSTALL_DONE" > .inst
+if exist ".inst" attrib +H .inst
 
 python TTFL_matrix.py
 
