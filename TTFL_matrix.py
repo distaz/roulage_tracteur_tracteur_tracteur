@@ -157,7 +157,7 @@ if not EXI or not FMAJ:
                 # Creation de la ligne de stat
                 stat_match = [player_name, player_equipe, player_poste]
                 
-                # Info n°1 : date du match
+                # Info num 1 : date du match
                 mois = int(stat.split(" ")[1].split("/")[0])
                 jour = int(stat.split(" ")[1].split("/")[1])
                 
@@ -166,21 +166,21 @@ if not EXI or not FMAJ:
                 else:
                     stat_match.append(datetime.date(ANNEE + 1, mois, jour))
                 
-                # Info n°1 bis : FLAG back to back
+                # Info num 1 bis : FLAG back to back
                 if DATE_BACK + datetime.timedelta(days = -1) == stat_match[3] :
                     BACK_TO_BACK.append(1)
                 else:
                     BACK_TO_BACK.append(0)
                 DATE_BACK = stat_match[3]
                    
-                # Info n°2 : DOM/EXT
+                # Info num 2 : DOM/EXT
                 stat = stat_iterator.__next__()
                 if stat == "vs" :
                     stat_match.append("DOM")
                 else :
                     stat_match.append("EXT")
                     
-                # Info n°3 : Adversaire
+                # Info num 3 : Adversaire
                 stat = stat_iterator.__next__()    
                 if stat in DICT_FRANCHISE:
                     stat_match.append(DICT_FRANCHISE[stat])
@@ -188,7 +188,7 @@ if not EXI or not FMAJ:
                     stat_match.append("Equipe Etrangere")  
     
                     
-                # Info n°4 : V/D
+                # Info num 4 : V/D
                 stat = stat_iterator.__next__()
                 if re.match(r"[0-9]?[0-9]?[0-9]?-[0-9]?[0-9]?[0-9]?", stat) is None:
                     if stat == "W":
@@ -196,7 +196,7 @@ if not EXI or not FMAJ:
                     else :
                         stat_match.append("D")
                     
-                # Info n°5 : Resultats du match
+                # Info num 5 : Resultats du match
                     stat = stat_iterator.__next__()
                     stat = stat_iterator.__next__()
                 else :
@@ -209,57 +209,57 @@ if not EXI or not FMAJ:
                     stat_match.append(int(stat.split("-")[0]))
                     
                     
-                # Info n°6 : Temps de jeu
+                # Info num 6 : Temps de jeu
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°7 : Tirs marques - Tirs tentes
+                # Info num 7 : Tirs marques - Tirs tentes
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat.split("-")[0]))
                 stat_match.append(int(stat.split("-")[1]))
                     
-                # Info n°8 : 3pts marques - 3pts tentes
-                stat = stat_iterator.__next__()
-                stat = stat_iterator.__next__()
-                stat_match.append(int(stat.split("-")[0]))
-                stat_match.append(int(stat.split("-")[1]))
-                    
-                # Info n°9 : Lancers francs marques - Lancers francs tentes
+                # Info num 8 : 3pts marques - 3pts tentes
                 stat = stat_iterator.__next__()
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat.split("-")[0]))
                 stat_match.append(int(stat.split("-")[1]))
                     
-                # Info n°10 : Rebonds
+                # Info num 9 : Lancers francs marques - Lancers francs tentes
+                stat = stat_iterator.__next__()
+                stat = stat_iterator.__next__()
+                stat_match.append(int(stat.split("-")[0]))
+                stat_match.append(int(stat.split("-")[1]))
+                    
+                # Info num 10 : Rebonds
                 stat = stat_iterator.__next__()
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°11 : Passes Decisives
+                # Info num 11 : Passes Decisives
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°12 : Blocs
+                # Info num 12 : Blocs
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°13 : Interceptions
+                # Info num 13 : Interceptions
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°14 : Fautes
+                # Info num 14 : Fautes
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°15 : Pertes de balles
+                # Info num 15 : Pertes de balles
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°16 : Points
+                # Info num 16 : Points
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°17 : Score TTFL
+                # Info num 17 : Score TTFL
                 stat_match.append(int(stat_match[22] 
                                 + stat_match[16] 
                                 + stat_match[17] 
