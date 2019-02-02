@@ -13,7 +13,7 @@ config.read('config.ini')
 #Identifiants de connexion
 PATH_TO_WRITE = config.get('csv', 'path')
 
-# Le traitement ne s'effectue que si le fichier n'est pas à jour
+# Le traitement ne s'effectue que si le fichier n'est pas a jour
 
 FMAJ = False
 EXI = os.path.exists("{}TTFL.csv".format(PATH_TO_WRITE))
@@ -63,7 +63,7 @@ if not EXI or not FMAJ:
     DICT_FRANCHISE["HOU"] = "Houston Rockets"
     
     
-    ## Récupération de la liste de joueurs 
+    ## Recuperation de la liste de joueurs 
     players = []
     
     tot_equipes = []
@@ -112,40 +112,40 @@ if not EXI or not FMAJ:
     
     liste_df = []
     
-    ## Récupération des stats des joueurs
+    ## Recuperation des stats des joueurs
     
     print("CHARGEMENT DES INFOS DES JOUEURS (Attention a ta connexion internet jeune fou ! )")
     for idp in players:
         
         stat_player = []
         
-        # Récupération du code html de la page totale
+        # Recuperation du code html de la page totale
         html_fullpage = html.parse("http://www.espn.com/nba/player/gamelog/_/id/{}".format(idp)).getroot()
         
-        #Récpération du nom du joueur
+        #Recperation du nom du joueur
         html_name = html_fullpage.find_class('mod-article-title player-stats')[0]
         player_name = html_name.text_content().split(" Game-by-Game ")[0]
         print("  ID : {} || Name : {}".format(idp, player_name))
         
-        #Récpération du poste du joueur
+        #Recperation du poste du joueur
         html_poste = html_fullpage.find_class('first')[0]
         if html_poste.text_content()[0] == "#":
             player_poste = html_poste.text_content().split(" ")[1]
         else :
             player_poste = html_poste.text_content()
     
-        #Récpération de l'équipe du joueur
+        #Recperation de l'equipe du joueur
         html_equipe = html_fullpage.find_class('last')[0]
         player_equipe = html_equipe.text_content()
     
-        # Récupération du code html du tableau de stat + Init de l'itérator
+        # Recuperation du code html du tableau de stat + Init de l'iterator
         html_tabstat = html_fullpage.find_class('tablehead')[0]
         stat_iterator = html_tabstat.itertext()
         
-        # Tant que stat est renseigné on boucle pour trouver tous les matchs
+        # Tant que stat est renseigne on boucle pour trouver tous les matchs
         stat = stat_iterator.__next__()
         
-        # Création d'une variable pour flag back to back
+        # Creation d'une variable pour flag back to back
         BACK_TO_BACK = []
         DATE_BACK = datetime.date(1900,1,1)
         
@@ -154,7 +154,7 @@ if not EXI or not FMAJ:
             # Recherche d'un champ date pour initialiser la ligne
             if re.match(r"[MTWFS][ouehra][neduit] [1-9][012]?/[1-9][0-9]?", stat) is not None:
     
-                # Création de la ligne de stat
+                # Creation de la ligne de stat
                 stat_match = [player_name, player_equipe, player_poste]
                 
                 # Info n°1 : date du match
@@ -185,7 +185,7 @@ if not EXI or not FMAJ:
                 if stat in DICT_FRANCHISE:
                     stat_match.append(DICT_FRANCHISE[stat])
                 else :
-                    stat_match.append("Equipe Etrangère")  
+                    stat_match.append("Equipe Etrangere")  
     
                     
                 # Info n°4 : V/D
@@ -196,7 +196,7 @@ if not EXI or not FMAJ:
                     else :
                         stat_match.append("D")
                     
-                # Info n°5 : Résultats du match
+                # Info n°5 : Resultats du match
                     stat = stat_iterator.__next__()
                     stat = stat_iterator.__next__()
                 else :
@@ -213,18 +213,18 @@ if not EXI or not FMAJ:
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°7 : Tirs marqués - Tirs tentés
+                # Info n°7 : Tirs marques - Tirs tentes
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat.split("-")[0]))
                 stat_match.append(int(stat.split("-")[1]))
                     
-                # Info n°8 : 3pts marqués - 3pts tentés
+                # Info n°8 : 3pts marques - 3pts tentes
                 stat = stat_iterator.__next__()
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat.split("-")[0]))
                 stat_match.append(int(stat.split("-")[1]))
                     
-                # Info n°9 : Lancers francs marqués - Lancers francs tentés
+                # Info n°9 : Lancers francs marques - Lancers francs tentes
                 stat = stat_iterator.__next__()
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat.split("-")[0]))
@@ -235,7 +235,7 @@ if not EXI or not FMAJ:
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
-                # Info n°11 : Passes Décisives
+                # Info n°11 : Passes Decisives
                 stat = stat_iterator.__next__()
                 stat_match.append(int(stat))
                     
@@ -285,9 +285,9 @@ if not EXI or not FMAJ:
         for i in range(len(stat_player)):
             stat_player[i].append(BACK_TO_BACK[i+1])
                 
-        #Création du DATA_FRAME du joueur
+        #Creation du DATA_FRAME du joueur
         
-        #Création des labels
+        #Creation des labels
         noms_colonnes = ["joueur",
                          "equipe",
                          "poste",
@@ -334,7 +334,7 @@ if not EXI or not FMAJ:
     
     print("CALCUL DES MOYENNES GLISSANTES")
     
-    #enlève la ligne si le joueur n'a pas joué
+    #enleve la ligne si le joueur n'a pas joue
     all_nba_stat=all_nba_stat.set_index("min").drop(0,axis=0)
     all_nba_stat=all_nba_stat.set_index(np.linspace(0,len(all_nba_stat)-1,num=len(all_nba_stat)).astype(int))
     
@@ -361,14 +361,14 @@ if not EXI or not FMAJ:
     END_GLISS = datetime.datetime.now()
     print("CALCUL TERMINE")
     
-    ##Prise en compte des bléssés 
+    ##Prise en compte des blesses 
     
     
     #otre_fr = {"Los Angeles Clippers" : "LA Clippers", }
     #
     #html_fullpage = html.parse("http://www.rotoworld.com/teams/injuries/nba/all/").getroot()
     #
-    ##Récpération du nom du joueur
+    ##Recperation du nom du joueur
     #html_name = html_fullpage.find_class('left_wide')[0]
     #
     #blesus_iterator = html_name.itertext()
@@ -413,12 +413,12 @@ if not EXI or not FMAJ:
     
     
     
-    print("Temps pour importer les données : {}".format(END_EXTRACT - TIME))
+    print("Temps pour importer les donnees : {}".format(END_EXTRACT - TIME))
     print("Temps pour calculer les moyennes glissantes : {}".format(END_GLISS - END_EXTRACT))
-    print("Nombre de joueurs importés : {}".format(len(liste_df)))
+    print("Nombre de joueurs importes : {}".format(len(liste_df)))
     
     print("CHARGEMENT DU CALENDRIER")
-    # Création des dates des 30 prochains jours
+    # Creation des dates des 30 prochains jours
     DATE_JOUR = datetime.date.today()
     LIST_DATE = []
     for i in range(30) :
@@ -433,10 +433,10 @@ if not EXI or not FMAJ:
     # Chargement des matchs pour chaque jour
     for dt in LIST_DATE:
         
-        # Récupération du code html de la page totale
+        # Recuperation du code html de la page totale
         html_fullpage = html.parse("http://www.espn.com/nba/schedule/_/date/{}".format(dt)).getroot()
         
-        #Récpération de la liste des matchs du jour
+        #Recperation de la liste des matchs du jour
         html_matchs = html_fullpage.find_class('responsive-table-wrap')[0]
         
         match_iterator = html_matchs.itertext()
@@ -445,7 +445,7 @@ if not EXI or not FMAJ:
         
         match = match_iterator.__next__()
         
-        # Récupération des matchs (DOM - EXT)
+        # Recuperation des matchs (DOM - EXT)
         while match is not None:
             
             
@@ -480,7 +480,7 @@ if not EXI or not FMAJ:
     
     
     calendars=dict() 
-    #création du calendrier avec les joueurs impliqués à chaque date
+    #creation du calendrier avec les joueurs impliques a chaque date
     for date in dico_matchs:
         players=[]
         for game in dico_matchs[date]:
@@ -509,7 +509,7 @@ if not EXI or not FMAJ:
     
     data=all_nba_stat[['joueur','adversaire','lieu','poste','ttfl','ttfl_30']]
     
-    #bonus calculé directement dans la régression
+    #bonus calcule directement dans la regression
     reg=sm.ols(formula="ttfl~joueur*lieu+adversaire*poste+ttfl_30",data=data).fit()
     print(reg.rsquared)
     
