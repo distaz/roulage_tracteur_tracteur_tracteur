@@ -536,8 +536,10 @@ if not EXI or not FMAJ:
     data=all_nba_stat[['joueur','adversaire','lieu','poste','ttfl','ttfl_30','ttfl_10']]
     
     #bonus calcule directement dans la regression
-    reg=sm.ols(formula="ttfl~lieu+adversaire*poste+ttfl_10",data=data).fit()
-    print(reg.rsquared_adj)
+    reg_30=sm.ols(formula="ttfl~lieu+adversaire*poste+ttfl_30",data=data).fit()
+    reg_10=sm.ols(formula="ttfl~lieu+adversaire*poste+ttfl_10",data=data).fit()
+    print(reg_30.rsquared_adj)
+    print(reg_10.rsquared_adj)
     
     matrix=np.zeros((len(all_nba_stat.groupby(['joueur'])),len(calendars)))
     noms=[]
@@ -551,7 +553,7 @@ if not EXI or not FMAJ:
             df_j=pd.DataFrame(calendars[date],columns=['joueur','adversaire','poste','lieu','ttfl_30','ttfl_10']).set_index('joueur')
             df=pd.DataFrame(calendars[date],columns=['joueur','adversaire','poste','lieu','ttfl_30','ttfl_10'])
             if joueur[0] in df_j['lieu']:
-                matrix[i,j]=reg.predict(df.iloc[np.where(df['joueur']==joueur[0])])
+                matrix[i,j]=reg_30.predict(df.iloc[np.where(df['joueur']==joueur[0])])/2+reg_10.predict(df.iloc[np.where(df['joueur']==joueur[0])])/2
             j+=1
         i+=1
     
