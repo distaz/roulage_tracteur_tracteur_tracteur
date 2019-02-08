@@ -361,6 +361,29 @@ if not EXI or not FMAJ:
     END_GLISS = datetime.datetime.now()
     print("CALCUL TERMINE")
     
+    
+    
+    
+    
+    # Calcul de TTFL_30 : moyenne ttfl glissante sur 10 jours
+    all_nba_stat["ttfl_10"] = np.nan
+    for date in [datetime.date.today() - datetime.timedelta(days=x) for x in range(0, (datetime.date.today() - START_NBA).days + 1)]:
+        nba_red_date = all_nba_stat[["joueur", "ttfl"]]
+        nba_red_date = nba_red_date[all_nba_stat["date_match"] <= date]
+        nba_red_date = nba_red_date[all_nba_stat["date_match"] > date - datetime.timedelta(days=10)]
+        nba_red_date = nba_red_date.groupby("joueur").mean()
+        nba_red_date = nba_red_date.reset_index(level=['joueur'])
+        nba_red_date["date_match"] = date
+        nba_red_date = nba_red_date.rename(index = str, columns={"ttfl" : "ttfl_10"})
+    
+        
+        all_nba_stat = pd.merge(all_nba_stat, nba_red_date, how = 'left', on= ["joueur", "date_match"])
+        all_nba_stat["ttfl_10"] = [all_nba_stat["ttfl_10_y"][i] if all_nba_stat["ttfl_10_x"].isnull()[i] else all_nba_stat["ttfl_10_x"][i] for i in range(len(all_nba_stat["ttfl_10_x"]))]
+        all_nba_stat = all_nba_stat[["joueur", "poste", "date_match", "adversaire", "equipe", "lieu", "ttfl", "ttfl_30", "ttfl_10"]]
+    
+    END_GLISS = datetime.datetime.now()
+    print("CALCUL TERMINE")
+    
     ##Prise en compte des blesses 
     
     
@@ -469,7 +492,7 @@ if not EXI or not FMAJ:
         
     
     print("TRUCS CHELOU DE MARCO")
-    players_teams=[[],[],[],[]]
+    players_teams=[[],[],[],[],[]]
     
     for i in range(1,len(all_nba_stat['joueur'])):
         if all_nba_stat['joueur'][i-1]!=all_nba_stat['joueur'][i] or i==1:
@@ -477,6 +500,7 @@ if not EXI or not FMAJ:
             players_teams[1].append(all_nba_stat['equipe'][i])
             players_teams[2].append(all_nba_stat['poste'][i])
             players_teams[3].append(all_nba_stat['ttfl_30'][i])
+            players_teams[4].append(all_nba_stat['ttfl_10'][i])
     
     
     calendars=dict() 
@@ -495,6 +519,7 @@ if not EXI or not FMAJ:
                     player.append("DOM")
                     player.append(players_teams[3][i])
                     players.append(player)
+                    player.append(players_teams[4][i])
                 elif players_teams[1][i]==teamA:
                     player=[]
                     player.append(players_teams[0][i])
@@ -503,15 +528,16 @@ if not EXI or not FMAJ:
                     player.append("EXT")
                     player.append(players_teams[3][i])
                     players.append(player)
+                    player.append(players_teams[4][i])
             
         calendars[date]=players
     
     
-    data=all_nba_stat[['joueur','adversaire','lieu','poste','ttfl','ttfl_30']]
+    data=all_nba_stat[['joueur','adversaire','lieu','poste','ttfl','ttfl_30','ttfl_10']]
     
     #bonus calcule directement dans la regression
-    reg=sm.ols(formula="ttfl~joueur*lieu+adversaire*poste+ttfl_30",data=data).fit()
-    print(reg.rsquared)
+    reg=sm.ols(formula="ttfl~lieu+adversaire*poste+ttfl_10",data=data).fit()
+    print(reg.rsquared_adj)
     
     matrix=np.zeros((len(all_nba_stat.groupby(['joueur'])),len(calendars)))
     noms=[]
