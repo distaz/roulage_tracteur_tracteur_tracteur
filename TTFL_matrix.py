@@ -20,7 +20,7 @@ EXI = os.path.exists("{}TTFL.csv".format(PATH_TO_WRITE))
 
 if EXI:
     FMAJ = (datetime.date.fromtimestamp(os.path.getmtime("{}TTFL.csv".format(PATH_TO_WRITE))) == datetime.date.today() and datetime.datetime.fromtimestamp(os.path.getmtime("{}TTFL.csv".format(PATH_TO_WRITE))).hour > 8)
-    
+  
 if not EXI or not FMAJ:
     
     TIME = datetime.datetime.now()
@@ -548,8 +548,8 @@ if not EXI or not FMAJ:
         j=0
         noms.append(joueur[0])
         for date in calendars:
-            df_j=pd.DataFrame(calendars[date],columns=['joueur','adversaire','poste','lieu','ttfl_30']).set_index('joueur')
-            df=pd.DataFrame(calendars[date],columns=['joueur','adversaire','poste','lieu','ttfl_30'])
+            df_j=pd.DataFrame(calendars[date],columns=['joueur','adversaire','poste','lieu','ttfl_30','ttfl_10']).set_index('joueur')
+            df=pd.DataFrame(calendars[date],columns=['joueur','adversaire','poste','lieu','ttfl_30','ttfl_10'])
             if joueur[0] in df_j['lieu']:
                 matrix[i,j]=reg.predict(df.iloc[np.where(df['joueur']==joueur[0])])
             j+=1
