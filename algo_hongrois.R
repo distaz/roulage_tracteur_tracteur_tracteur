@@ -40,14 +40,14 @@ for (iter in 1 : length(PLAYERS)){
   h=0
   for (j in 1:length(noms$V1)){
     joueur=rownames(TTFL1)[j]
-    for (i in 1:30){
+    for (i in 1:length(TTFL1)){
       if (TTFL1[j,i]<0 || is.na(TTFL1[j,i]) || is.null(TTFL1[j,i])){
         TTFL1[j,i]=0
       }
     }
     if (joueur %in% histo){
       h=h+1
-      for (i in 1:30){
+      for (i in 1:length(TTFL1)){
         if (TTFL1[j,i]<0 || is.na(TTFL1[j,i])){
           TTFL1[j,i]=0
         }
