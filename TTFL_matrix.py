@@ -448,8 +448,8 @@ if not EXI or not FMAJ:
     # Creation des dates des 30 prochains jours
     DATE_JOUR = datetime.date.today()
     LIST_DATE = []
-    nb_jours_predits=10  ######POTENTIEL PARAMETRE pour réduire la matrice de prédiction 
-    ##################♥et optimiser sur 10 jours au lieu de 30
+    nb_jours_predits=10  ######POTENTIEL PARAMETRE pour reduire la matrice de prediction 
+    ##################et optimiser sur 10 jours au lieu de 30
     #############################################
     for i in range(nb_jours_predits) :
         temp_date = DATE_JOUR + datetime.timedelta(days = i)
