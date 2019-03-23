@@ -450,7 +450,7 @@ if not EXI or not FMAJ:
     DATE_JOUR = datetime.date.today()
     LIST_DATE = []
     # LECTURE DU PARAMETRE POUR LE NB DE JOURS PREDITS
-    NB_JOURS_PREDITS = config.get('predict', 'nbdays')
+    NB_JOURS_PREDITS = int(config.get('predict', 'nbdays'))
     ##################et optimiser sur 10 jours au lieu de 30
     #############################################
     for i in range(NB_JOURS_PREDITS) :
