@@ -1,5 +1,6 @@
 import pandas as pd
 from lxml import html
+import requests
 import re
 import os
 import datetime
@@ -8,7 +9,7 @@ import numpy as np
 import statsmodels.formula.api as sm
 
 config = configparser.RawConfigParser()
-config.read('config.ini')
+config.read('./config.ini')
 
 #Identifiants de connexion
 PATH_TO_WRITE = config.get('csv', 'path')
@@ -26,8 +27,8 @@ if not EXI or not FMAJ:
     TIME = datetime.datetime.now()
     
     #PARAMETRES GLOBAUX
-    ANNEE = 2018
-    START_NBA = datetime.date(ANNEE, 10, 16)
+    ANNEE = 2019
+    START_NBA = datetime.date(ANNEE, 10, 22)
     END_NBA = datetime.date(ANNEE+1, 7, 1)
     DICT_FRANCHISE = dict()
     DICT_FRANCHISE["LAL"] = "Los Angeles Lakers"
@@ -67,281 +68,269 @@ if not EXI or not FMAJ:
     players = dict()
     
     tot_equipes = []
-    tot_equipes.append("atl/atlanta-hawks")
-    tot_equipes.append("bos/boston-celtics")
-    tot_equipes.append("bkn/brooklyn-nets")
-    tot_equipes.append("cha/charlotte-hornets")
-    tot_equipes.append("chi/chicago-bulls")
-    tot_equipes.append("cle/cleveland-cavaliers")
-    tot_equipes.append("dal/dallas-mavericks")
-    tot_equipes.append("den/denver-nuggets")
-    tot_equipes.append("det/detroit-pistons")
-    tot_equipes.append("gs/golden-state-warriors")
-    tot_equipes.append("hou/houston-rockets")
-    tot_equipes.append("ind/indiana-pacers")
-    tot_equipes.append("lac/la-clippers")
-    tot_equipes.append("lal/los-angeles-lakers")
-    tot_equipes.append("mem/memphis-grizzlies")
-    tot_equipes.append("mia/miami-heat")
-    tot_equipes.append("mil/milwaukee-bucks")
-    tot_equipes.append("min/minnesota-timberwolves")
-    tot_equipes.append("no/new-orleans-pelicans")
-    tot_equipes.append("ny/new-york-knicks")
-    tot_equipes.append("okc/oklahoma-city-thunder")
-    tot_equipes.append("orl/orlando-magic")
-    tot_equipes.append("phi/philadelphia-76ers")
-    tot_equipes.append("phx/phoenix-suns")
-    tot_equipes.append("por/portland-trail-blazers")
-    tot_equipes.append("sac/sacramento-kings")
-    tot_equipes.append("sa/san-antonio-spurs")
-    tot_equipes.append("tor/toronto-raptors")
-    tot_equipes.append("utah/utah-jazz")
-    tot_equipes.append("wsh/washington-wizards")
+    tot_equipes.append("atl")
+    tot_equipes.append("bos")
+    tot_equipes.append("bkn")
+    tot_equipes.append("cha")
+    tot_equipes.append("chi")
+    tot_equipes.append("cle")
+    tot_equipes.append("dal")
+    tot_equipes.append("den")
+    tot_equipes.append("det")
+    tot_equipes.append("gs")
+    tot_equipes.append("hou")
+    tot_equipes.append("ind")
+    tot_equipes.append("lac")
+    tot_equipes.append("lal")
+    tot_equipes.append("mem")
+    tot_equipes.append("mia")
+    tot_equipes.append("mil")
+    tot_equipes.append("min")
+    tot_equipes.append("no")
+    tot_equipes.append("ny")
+    tot_equipes.append("okc")
+    tot_equipes.append("orl")
+    tot_equipes.append("phi")
+    tot_equipes.append("phx")
+    tot_equipes.append("por")
+    tot_equipes.append("sac")
+    tot_equipes.append("sa")
+    tot_equipes.append("tor")
+    tot_equipes.append("utah")
+    tot_equipes.append("wsh")
     
     
     print("CHARGEMENT DE LA LISTE DES JOUEURS")
     for equipe in tot_equipes:
-        html_fullpage = html.parse("http://www.espn.com/nba/team/roster/_/name/{}".format(equipe)).getroot()
+#    for equipe in ["tor"]:
         
-        html_name = html_fullpage.find_class('Table2__td')
+        html_fullpage = html.fromstring(requests.get("https://www.espn.com/nba/team/roster/_/name/{}".format(equipe)).content)
+        html_name = html_fullpage.find_class('Table__TBODY')
         for x in html_name:
             for t in x.iterlinks():
-                to_add = t[2].split("/")[7]
-                if to_add != "nba":
-                    players[t[2].split("/")[7]] = 0
+                if t[2][0:4] == "http":
+                    players["{}/{}".format(t[2].split("/")[7], t[2].split("/")[8])] = 0
+                    
     print("TERMINE !")
     
     
-    liste_df = []
+    dict_df = dict()
     
     ## Recuperation des stats des joueurs
     
     print("CHARGEMENT DES INFOS DES JOUEURS (Attention a ta connexion internet jeune fou ! )")
     for idp in players.keys():
-        
+#    for idp in ["3206/marc-gasol"]:    
         stat_player = []
         
         # Recuperation du code html de la page totale
-        html_fullpage = html.parse("http://www.espn.com/nba/player/gamelog/_/id/{}".format(idp)).getroot()
+        html_fullpage = html.fromstring(requests.get("http://www.espn.com/nba/player/gamelog/_/id/{}".format(idp)).content)
 
         #Recperation du nom du joueur
-
-
-        if len(html_fullpage.find_class('Table2__tr Table2__tr--sm Table2__even')) > 0:
-            html_prename = html_fullpage.find_class('truncate min-w-0')[0]
-            html_name = html_fullpage.find_class('truncate min-w-0')[1]   
+        player_name = ""
+        if len(html_fullpage.find_class('truncate min-w-0')) > 0:
+            player_name = "{} {}".format(html_fullpage.find_class('truncate min-w-0')[0].text_content(), html_fullpage.find_class('truncate min-w-0')[1].text_content())
             
-            player_name = "{} {}".format(html_prename.text_content(), html_name.text_content())
-            print("  ID : {} || Name : {}".format(idp, player_name))
-            
-            
-            
-            #Recperation du poste du joueur
-            html_poste = html_fullpage.find_class('PlayerHeader__Team_Info list flex pt1 pr4 min-w-0 flex-basis-0 flex-shrink flex-grow nowrap')[0]
-            if "{}".format(html_poste.text_content()).find("Point Guard"):
-                player_poste = "PG"
+        player_equipe = ""
+        player_poste = ""
+        if len(html_fullpage.find_class('PlayerHeader__Team_Info')) > 0:
+            #Recperation de l'equipe du joueur + poste
+            info_joueur = html_fullpage.find_class('PlayerHeader__Team_Info')[0].text_content()
+            player_equipe = info_joueur.split("#")[0]
+            if info_joueur.find("Guard") > 0:
+                player_poste = "Guard"
+            elif info_joueur.find("Forward") > 0:
+                player_poste = "Forward"
+            elif info_joueur.find("Center") > 0:
+                player_poste = "Center"
             else :
-                if "{}".format(html_poste.text_content()).find("Small Forward"):
-                    player_poste = "SF"
-                else :
-                    if "{}".format(html_poste.text_content()).find("Shooting Guard"):
-                        player_poste = "SG"
+                print("ERREUR POSTE : {}".format(info_joueur))
+            
+        print("{} ({})".format(player_name, player_equipe))
+        
+        
+        # Recuperation du code html du tableau de stat + Init de l'iterator
+        tab_html_tabstat = html_fullpage.find_class('Table__TBODY')
+        
+#        for html_tabstat in tab_html_tabstat:
+        if len(tab_html_tabstat) > 0:
+            html_tabstat = tab_html_tabstat[0]
+            stat_iterator = html_tabstat.itertext()
+                
+            # Tant que stat est renseigne on boucle pour trouver tous les matchs
+            stat = stat_iterator.__next__()
+            
+            while stat is not None:
+                
+                # Recherche d'un champ date pour initialiser la ligne
+                if re.match(r"[MTWFS][ouehra][neduit] [1-9][012]?/[1-9][0-9]?", stat) is not None:
+        
+                    # Creation de la ligne de stat
+                    stat_match = [player_name, player_equipe, player_poste]
+                    
+                    # Info num 1 : date du match
+                    mois = int(stat.split(" ")[1].split("/")[0])
+                    jour = int(stat.split(" ")[1].split("/")[1])
+                    
+                    if mois > 9:
+                        stat_match.append(datetime.date(ANNEE, mois, jour))
+                    else:
+                        stat_match.append(datetime.date(ANNEE + 1, mois, jour))
+                       
+                    # Info num 2 : DOM/EXT
+                    stat = stat_iterator.__next__()
+                    if stat == "vs" :
+                        stat_match.append("DOM")
                     else :
-                        if "{}".format(html_poste.text_content()).find("Power Forward"):
-                            player_poste = "PF"
+                        stat_match.append("EXT")
+                        
+                    # Info num 3 : Adversaire
+                    stat = stat_iterator.__next__()    
+                    if stat in DICT_FRANCHISE:
+                        stat_match.append(DICT_FRANCHISE[stat])
+                    else :
+                        stat_match.append("Equipe Etrangere")  
+                                
+                        
+                    # Info num 4 : V/D
+                    stat = stat_iterator.__next__()
+                    if re.match(r"[0-9]?[0-9]?[0-9]?-[0-9]?[0-9]?[0-9]?", stat) is None:
+                        if stat == "W":
+                            stat_match.append("V")
                         else :
-                            if "{}".format(html_poste.text_content()).find("Center"):
-                                player_poste = "C"
-                            else :
-                                print("ERREUR POSTE : {}".format(html_poste.text_content()))
-        
-            #Recperation de l'equipe du joueur
-            html_equipe = html_fullpage.find_class('clr-black')[0]
-            player_equipe = html_equipe.text_content()
-        
-            # Recuperation du code html du tableau de stat + Init de l'iterator
-            tab_html_tabstat = html_fullpage.find_class('Table2__tr Table2__tr--sm Table2__even')
-            for html_tabstat in tab_html_tabstat:
-                stat_iterator = html_tabstat.itertext()
-                
-                # Tant que stat est renseigne on boucle pour trouver tous les matchs
-                stat = stat_iterator.__next__()
-                
-                while stat is not None:
+                            stat_match.append("D")
+                        
+                    # Info num 5 : Resultats du match
+                        stat = stat_iterator.__next__()
+                    else :
+                        stat_match.append("P")
+                    if stat_match[4] == "DOM" :
+                        stat_match.append(int(stat.split("-")[0]))
+                        stat_match.append(int(stat.split("-")[1].split(" ")[0]))
+                    else :
+                        stat_match.append(int(stat.split("-")[1].split(" ")[0]))
+                        stat_match.append(int(stat.split("-")[0]))
+                        
+                        
+                    # Info num 6 : Temps de jeu
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat))
+                        
+                    # Info num 7 : Tirs marques - Tirs tentes
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat.split("-")[0]))
+                    stat_match.append(int(stat.split("-")[1]))
+                        
+                    # Info num 8 : 3pts marques - 3pts tentes
+                    stat = stat_iterator.__next__()
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat.split("-")[0]))
+                    stat_match.append(int(stat.split("-")[1]))
+                        
+                    # Info num 9 : Lancers francs marques - Lancers francs tentes
+                    stat = stat_iterator.__next__()
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat.split("-")[0]))
+                    stat_match.append(int(stat.split("-")[1]))
+                        
+                    # Info num 10 : Rebonds
+                    stat = stat_iterator.__next__()
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat))
+                        
+                    # Info num 11 : Passes Decisives
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat))
+                        
+                    # Info num 12 : Blocs
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat))
+                        
+                    # Info num 13 : Interceptions
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat))
+                        
+                    # Info num 14 : Fautes
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat))
+                        
+                    # Info num 15 : Pertes de balles
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat))
+                        
+                    # Info num 16 : Points
+                    stat = stat_iterator.__next__()
+                    stat_match.append(int(stat))
+                        
+                    # Info num 17 : Score TTFL
+                    stat_match.append(int(stat_match[22] 
+                                    + stat_match[16] 
+                                    + stat_match[17] 
+                                    + stat_match[19] 
+                                    + stat_match[18] 
+                                    + 2 * stat_match[10] 
+                                    + 2 * stat_match[12] 
+                                    + 2 * stat_match[14] 
+                                    - stat_match[11] 
+                                    - stat_match[13] 
+                                    - stat_match[15] 
+                                    - stat_match[21]))
                     
-                    # Recherche d'un champ date pour initialiser la ligne
-                    if re.match(r"[MTWFS][ouehra][neduit] [1-9][012]?/[1-9][0-9]?", stat) is not None:
+                    stat_player.append(stat_match)
+                                        
+                try :
+                    stat = stat_iterator.__next__()
+                except StopIteration:
+                    break
             
-                        # Creation de la ligne de stat
-                        stat_match = [player_name, player_equipe, player_poste]
-                        
-                        # Info num 1 : date du match
-                        mois = int(stat.split(" ")[1].split("/")[0])
-                        jour = int(stat.split(" ")[1].split("/")[1])
-                        
-                        if mois > 9:
-                            stat_match.append(datetime.date(ANNEE, mois, jour))
-                        else:
-                            stat_match.append(datetime.date(ANNEE + 1, mois, jour))
-                           
-                        # Info num 2 : DOM/EXT
-                        stat = stat_iterator.__next__()
-                        if stat == "vs" :
-                            stat_match.append("DOM")
-                        else :
-                            stat_match.append("EXT")
-                            
-                        # Info num 3 : Adversaire
-                        stat = stat_iterator.__next__()    
-                        if stat in DICT_FRANCHISE:
-                            stat_match.append(DICT_FRANCHISE[stat])
-                        else :
-                            stat_match.append("Equipe Etrangere")  
-            
-                            
-                        # Info num 4 : V/D
-                        stat = stat_iterator.__next__()
-                        if re.match(r"[0-9]?[0-9]?[0-9]?-[0-9]?[0-9]?[0-9]?", stat) is None:
-                            if stat == "W":
-                                stat_match.append("V")
-                            else :
-                                stat_match.append("D")
-                            
-                        # Info num 5 : Resultats du match
-                            stat = stat_iterator.__next__()
-                        else :
-                            stat_match.append("P")
-                        if stat_match[4] == "DOM" :
-                            stat_match.append(int(stat.split("-")[0]))
-                            stat_match.append(int(stat.split("-")[1].split(" ")[0]))
-                        else :
-                            stat_match.append(int(stat.split("-")[1].split(" ")[0]))
-                            stat_match.append(int(stat.split("-")[0]))
-                            
-                            
-                        # Info num 6 : Temps de jeu
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat))
-                            
-                        # Info num 7 : Tirs marques - Tirs tentes
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat.split("-")[0]))
-                        stat_match.append(int(stat.split("-")[1]))
-                            
-                        # Info num 8 : 3pts marques - 3pts tentes
-                        stat = stat_iterator.__next__()
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat.split("-")[0]))
-                        stat_match.append(int(stat.split("-")[1]))
-                            
-                        # Info num 9 : Lancers francs marques - Lancers francs tentes
-                        stat = stat_iterator.__next__()
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat.split("-")[0]))
-                        stat_match.append(int(stat.split("-")[1]))
-                            
-                        # Info num 10 : Rebonds
-                        stat = stat_iterator.__next__()
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat))
-                            
-                        # Info num 11 : Passes Decisives
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat))
-                            
-                        # Info num 12 : Blocs
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat))
-                            
-                        # Info num 13 : Interceptions
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat))
-                            
-                        # Info num 14 : Fautes
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat))
-                            
-                        # Info num 15 : Pertes de balles
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat))
-                            
-                        # Info num 16 : Points
-                        stat = stat_iterator.__next__()
-                        stat_match.append(int(stat))
-                            
-                        # Info num 17 : Score TTFL
-                        stat_match.append(int(stat_match[22] 
-                                        + stat_match[16] 
-                                        + stat_match[17] 
-                                        + stat_match[19] 
-                                        + stat_match[18] 
-                                        + 2 * stat_match[10] 
-                                        + 2 * stat_match[12] 
-                                        + 2 * stat_match[14] 
-                                        - stat_match[11] 
-                                        - stat_match[13] 
-                                        - stat_match[15] 
-                                        - stat_match[21]))
-                        
-                        stat_player.append(stat_match)
-                        
-                    try :
-                        stat = stat_iterator.__next__()
-                    except StopIteration:
-                        break
                 
-                    
-            #Creation du DATA_FRAME du joueur
-            
-            #Creation des labels
-            noms_colonnes = ["joueur",
-                             "equipe",
-                             "poste",
-                             "date_match",
-                             "lieu",
-                             "adversaire",
-                             "statut",
-                             "score_pour",
-                             "score_contre",
-                             "min",
-                             "fgm",
-                             "fga",
-                             "3pm",
-                             "3pa",
-                             "ftm",
-                             "fta",
-                             "reb",
-                             "ast",
-                             "blk",
-                             "stl",
-                             "pf",
-                             "tov",
-                             "pts",
-                             "ttfl"]
-            
-            player_df = pd.DataFrame.from_records(stat_player, columns=noms_colonnes)
-            
-            # Choix des matchs NBA uniquement 
-            player_df = player_df[player_df["date_match"] >= START_NBA]
-            player_df = player_df[player_df["date_match"] <= END_NBA]
-            player_df = player_df[["joueur", "poste", "date_match", "equipe", "adversaire", "lieu", "min", "ttfl"]]
+        #Creation du DATA_FRAME du joueur
         
-            if not player_df.empty:
-                liste_df.append(player_df)
+        #Creation des labels
+        noms_colonnes = ["joueur",
+                         "equipe",
+                         "poste",
+                         "date_match",
+                         "lieu",
+                         "adversaire",
+                         "statut",
+                         "score_pour",
+                         "score_contre",
+                         "min",
+                         "fgm",
+                         "fga",
+                         "3pm",
+                         "3pa",
+                         "ftm",
+                         "fta",
+                         "reb",
+                         "ast",
+                         "blk",
+                         "stl",
+                         "pf",
+                         "tov",
+                         "pts",
+                         "ttfl"]
+        
+        player_df = pd.DataFrame.from_records(stat_player, columns=noms_colonnes)
+        
+        # Choix des matchs NBA uniquement 
+        player_df = player_df[player_df["date_match"] >= START_NBA]
+        player_df = player_df[player_df["date_match"] <= END_NBA]
+        player_df = player_df[["joueur", "poste", "date_match", "equipe", "adversaire", "lieu", "min", "ttfl"]]
+        
+        if not player_df.empty:
+            dict_df[idp] = player_df
     print("CHARGEMENT TERMINE")    
     
-    for i in range(len(liste_df)):
-        if i == 0:
-            all_nba_stat = liste_df[0]
-        else:
-            all_nba_stat = all_nba_stat.append(liste_df[i], ignore_index=True)
+    all_nba_stat = pd.concat(list(map(lambda x : dict_df[x], dict_df.keys())))
             
     
     print("CALCUL DES MOYENNES GLISSANTES")
     
     #enleve la ligne si le joueur n'a pas joue
-    all_nba_stat=all_nba_stat.set_index("min").drop(0,axis=0)
-    all_nba_stat=all_nba_stat.set_index(np.linspace(0,len(all_nba_stat)-1,num=len(all_nba_stat)).astype(int))
+    all_nba_stat = all_nba_stat[all_nba_stat["min"] >= 0]
+    all_nba_stat = all_nba_stat.reset_index(drop = True)
     
     END_EXTRACT = datetime.datetime.now()
     
@@ -443,7 +432,7 @@ if not EXI or not FMAJ:
     
     print("Temps pour importer les donnees : {}".format(END_EXTRACT - TIME))
     print("Temps pour calculer les moyennes glissantes : {}".format(END_GLISS - END_EXTRACT))
-    print("Nombre de joueurs importes : {}".format(len(liste_df)))
+    print("Nombre de joueurs importes : {}".format(len(dict_df)))
     
     print("CHARGEMENT DU CALENDRIER")
     # Creation des dates des 30 prochains jours
@@ -466,7 +455,7 @@ if not EXI or not FMAJ:
     for dt in LIST_DATE:
         
         # Recuperation du code html de la page totale
-        html_fullpage = html.parse("http://www.espn.com/nba/schedule/_/date/{}".format(dt)).getroot()
+        html_fullpage = html.fromstring(requests.get("http://www.espn.com/nba/schedule/_/date/{}".format(dt)).content)
         
         #Recperation de la liste des matchs du jour
         html_matchs = html_fullpage.find_class('responsive-table-wrap')[0]
@@ -495,6 +484,7 @@ if not EXI or not FMAJ:
             except StopIteration:
                 break 
         dico_matchs[dt] = matchs_jour
+#        print(matchs_jour)
             
     #print(dico_matchs)
     print("CALENDRIER OK")
