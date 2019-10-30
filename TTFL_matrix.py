@@ -276,7 +276,8 @@ if not EXI or not FMAJ:
                                     - stat_match[15] 
                                     - stat_match[21]))
                     
-                    stat_player.append(stat_match)
+                    if stat_match[3] <= TIME.date():
+                        stat_player.append(stat_match)
                                         
                 try :
                     stat = stat_iterator.__next__()
