@@ -20,25 +20,27 @@ for (i in 1 : length(config)){
 
 for (iter in 1 : length(PLAYERS)){
 
-  TTFL1 <- read.csv(str_c(PATH_TO_WRITE, "TTFL.csv"),sep=",",header = F)
-  noms <- read.csv(str_c(PATH_TO_WRITE, "noms.csv"),sep=",", header = F)
-  dates <- read.csv(str_c(PATH_TO_WRITE, "calendrier.csv"),sep=",",header = F)
-  historique <- read.delim(str_c(PATH_TO_WRITE, "Histo ", PLAYERS[iter], ".txt"),sep="\t", header = F, quote=)
+  TTFL1 <- read.csv(str_c(PATH_TO_WRITE, "/TTFL.csv"),sep=";",header = TRUE)
+  historique <- read.delim(str_c(PATH_TO_WRITE, "/Histo_", PLAYERS[iter], ".txt"),sep="\t", header = F, quote=)[,c(1,2)]
   
-  historique <- historique[,c(1,2)]
-  rownames(TTFL1)<-noms$V1
-  colnames(TTFL1)<-as.Date(dates$V1)
+  rownames(TTFL1)<-TTFL1$Nom
+  TTFL1 <- TTFL1[-1]
   TTFL1 <- TTFL1[,order(colnames(TTFL1))]
+  list_col = colnames(TTFL1)
+  for (i in 1:length(list_col)){
+	list_col[i] = substring(list_col[i], 2)
+	list_col[i] = gsub("\\.", "-", list_col[i])
+  }
+  colnames(TTFL1) = list_col
   
   histo=c()
-  
   for (i in 1:length(historique$V1)){
     temp=strsplit(as.character(historique$V2[i]),", ")
     histo=c(histo,paste(temp[[1]][2],temp[[1]][1]))
   }
   
   h=0
-  for (j in 1:length(noms$V1)){
+  for (j in 1:nrow(TTFL1)){
     joueur=rownames(TTFL1)[j]
     for (i in 1:length(TTFL1)){
       if (TTFL1[j,i]<0 || is.na(TTFL1[j,i]) || is.null(TTFL1[j,i])){
@@ -62,7 +64,6 @@ for (iter in 1 : length(PLAYERS)){
   #Joueurs blessés
   #blesses=c("LeBron James", "Anthony Davis", "Clint Capela")
   for (i in 1:length(BLESS)){
-    print(BLESS[i])
     TTFL1[which(rownames(TTFL1)==BLESS[i]),]=0
   }
   
@@ -71,7 +72,7 @@ for (iter in 1 : length(PLAYERS)){
   
   result<-solve_LSAP(t(as.matrix(TTFL1)),maximum = T)
   
-  picks=noms[result,1]
+  picks=rownames(TTFL1)[result]
   
   ## Check des meilleurs pour un soir choisi
   jour=1
@@ -82,13 +83,13 @@ for (iter in 1 : length(PLAYERS)){
   
   deck <- data.frame(0)
   for (i in 1:length(picks)){
-    deck[i,1] <- levels(picks)[c(picks[i])]
-    deck[i,2] <- TTFL1[rownames(TTFL1)==levels(picks)[c(picks[i])],i]
+    deck[i,1] <- picks[i]
+    deck[i,2] <- TTFL1[rownames(TTFL1)==picks[i], i]
   }
   colnames(deck) <- c("Joueurs","Score prédit")
   
   
   
-  write.table(deck, file = str_c(PATH_TO_WRITE, PLAYERS[iter], "_DECK_", Sys.Date(), ".txt"))
-  write.table(data[jour], file = str_c(PATH_TO_WRITE, PLAYERS[iter], "_PREDICT_", Sys.Date(), ".txt"))
+  write.table(deck, file = str_c(PATH_TO_WRITE, "/", PLAYERS[iter], "_DECK_", Sys.Date(), ".txt"))
+  write.table(data[jour], file = str_c(PATH_TO_WRITE, "/", PLAYERS[iter], "_PREDICT_", Sys.Date(), ".txt"))
 }
