@@ -26,41 +26,45 @@ if EXI:
 else:
     FMAJ = False
 
+START_TIME = datetime.now()
 if not EXI or not FMAJ:
-    START_TIME = datetime.now()
 
-    print("Début du chargement des joueurs :")
-    all_nba_stat = pd.concat([ttfls.get_stat_joueur(idjoueur, START_NBA).to_dataframe(columns=["Nom",
-                                                                                               "Poste",
-                                                                                               "Date",
-                                                                                               "Adversaire",
-                                                                                               "Equipe",
-                                                                                               "Lieu",
-                                                                                               "TTFL"])
-                              for equipe in CD_FRANCHISES
-                              for idjoueur in ttfls.get_liste_joueurs(equipe)],
-                             sort=False).reset_index(drop=True)
-    NB_JOUEURS_MANQUES = len(all_nba_stat[all_nba_stat["Nom"] == ""])
-    END_EXTRACT = datetime.now()
-    print("\nLe chargement des joueurs est terminé !")
-
-    # Calcul des moyennes glissantes
-    def calcul_moyenne_glissante(df_stat, nb_jour):
-        iter_date = datetime(datetime.now().year, datetime.now().month, datetime.now().day)
-        df_stat["TTFL_{}".format(nb_jour)] = np.nan
-        while iter_date > START_NBA:
-            nba_red_date = df_stat[df_stat["Date"] <= iter_date]
-            nba_red_date = nba_red_date[nba_red_date["Date"] > iter_date - timedelta(days=nb_jour)]
-            nba_red_date = nba_red_date.filter(["Nom", "TTFL"], axis=1).groupby("Nom").mean().reset_index()
-            nba_red_date["Date"] = iter_date
-            nba_red_date = nba_red_date.rename(columns={"TTFL": "TTFL_{}".format(nb_jour)})
-            df_stat = pd.merge(df_stat, nba_red_date, how='left', on=["Nom", "Date"], suffixes=["", "_new"])
-            df_stat["TTFL_{}".format(nb_jour)].fillna(df_stat["TTFL_{}_new".format(nb_jour)], inplace=True)
-            df_stat.drop(["TTFL_{}_new".format(nb_jour)], axis=1, inplace=True)
-            iter_date -= timedelta(days=1)
-        return df_stat
-    all_nba_stat = calcul_moyenne_glissante(all_nba_stat, 30)
-    all_nba_stat = calcul_moyenne_glissante(all_nba_stat, 10)
+    if not os.path.exists("{}/all_nba_stat.csv".format(PATH_TO_WRITE)):
+        print("Début du chargement des joueurs :")
+        all_nba_stat = pd.concat([ttfls.get_stat_joueur(idjoueur, START_NBA).to_dataframe(columns=["Nom",
+                                                                                                   "Poste",
+                                                                                                   "Date",
+                                                                                                   "Adversaire",
+                                                                                                   "Equipe",
+                                                                                                   "Lieu",
+                                                                                                   "TTFL"])
+                                  for equipe in CD_FRANCHISES
+                                  for idjoueur in ttfls.get_liste_joueurs(equipe)],
+                                 sort=False).reset_index(drop=True)
+        NB_JOUEURS_MANQUES = len(all_nba_stat[all_nba_stat["Nom"] == ""])
+        END_EXTRACT = datetime.now()
+        print("\nLe chargement des joueurs est terminé !")
+    
+        # Calcul des moyennes glissantes
+        def calcul_moyenne_glissante(df_stat, nb_jour):
+            iter_date = datetime(datetime.now().year, datetime.now().month, datetime.now().day)
+            df_stat["TTFL_{}".format(nb_jour)] = np.nan
+            while iter_date > START_NBA:
+                nba_red_date = df_stat[df_stat["Date"] < iter_date]
+                nba_red_date = nba_red_date[nba_red_date["Date"] >= iter_date - timedelta(days=nb_jour)]
+                nba_red_date = nba_red_date.filter(["Nom", "TTFL"], axis=1).groupby("Nom").mean().reset_index()
+                nba_red_date["Date"] = iter_date
+                nba_red_date = nba_red_date.rename(columns={"TTFL": "TTFL_{}".format(nb_jour)})
+                df_stat = pd.merge(df_stat, nba_red_date, how='left', on=["Nom", "Date"], suffixes=["", "_new"])
+                df_stat["TTFL_{}".format(nb_jour)].fillna(df_stat["TTFL_{}_new".format(nb_jour)], inplace=True)
+                df_stat.drop(["TTFL_{}_new".format(nb_jour)], axis=1, inplace=True)
+                iter_date -= timedelta(days=1)
+            return df_stat
+        all_nba_stat = calcul_moyenne_glissante(all_nba_stat, 30)
+        all_nba_stat = calcul_moyenne_glissante(all_nba_stat, 10)
+        all_nba_stat.to_csv("{}/all_nba_stat.csv".format(PATH_TO_WRITE), sep=";")
+    else:
+        all_nba_stat = pd.read_csv("{}/all_nba_stat.csv".format(PATH_TO_WRITE), sep=";")
 
     END_GLISS = datetime.now()
 

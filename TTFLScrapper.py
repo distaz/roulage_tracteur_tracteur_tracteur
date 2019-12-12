@@ -34,7 +34,7 @@ def get_liste_joueurs(cd_franchise):
                     joueurs.add(html_links[2].split("/")[7])
                 except ValueError:
                     pass
-    print("\nChargement de la franchise : {}\n".format(cd_franchise))
+    print("\nChargement de la franchise : {} ({} joueurs)\n".format(cd_franchise, len(joueurs)))
 
     return joueurs
 
