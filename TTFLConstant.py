@@ -1,7 +1,7 @@
 from datetime import datetime
 
-START_NBA = datetime(datetime.now().year, 10, 22)
-END_NBA = datetime(datetime.now().year + 1, 7, 1)
+START_NBA = datetime(2019, 10, 22)
+END_NBA = datetime(2019 + 1, 7, 1)
 
 DICT_FRANCHISE = {"LAL": "Los Angeles Lakers",
                   "POR": "Portland Trail Blazers",

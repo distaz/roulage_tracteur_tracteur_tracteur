@@ -8,7 +8,8 @@ import pandas as pd
 import numpy as np
 import statsmodels.formula.api as sm
 
-import TTFLScrapper as ttfls
+from TTFLScrapper import get_liste_joueurs, get_liste_match, get_stat_joueur
+
 from TTFLConstant import START_NBA, CD_FRANCHISES
 
 # Configuration :
@@ -27,24 +28,38 @@ else:
     FMAJ = False
 
 START_TIME = datetime.now()
+END_EXTRACT = 0
+NB_JOUEURS_MANQUES = 0
+
 if not EXI or not FMAJ:
 
-    if not os.path.exists("{}/all_nba_stat.csv".format(PATH_TO_WRITE)):
+    # Le fichier all_nba_stat exist ?
+    all_stat_exist = os.path.exists("{}/all_nba_stat.csv".format(PATH_TO_WRITE))
+    if all_stat_exist:
+        # Le fichier est créé aujourd'hui après 8h ?
+        all_stat_today = date.fromtimestamp(
+            os.path.getmtime("{}/all_nba_stat.csv".format(PATH_TO_WRITE))) == date.today() \
+                         and datetime.fromtimestamp(
+            os.path.getmtime("{}/all_nba_stat.csv".format(PATH_TO_WRITE))).hour > 8
+    else:
+        all_stat_today = False
+
+    if not all_stat_exist or not all_stat_today:
         print("Début du chargement des joueurs :")
-        all_nba_stat = pd.concat([ttfls.get_stat_joueur(idjoueur, START_NBA).to_dataframe(columns=["Nom",
-                                                                                                   "Poste",
-                                                                                                   "Date",
-                                                                                                   "Adversaire",
-                                                                                                   "Equipe",
-                                                                                                   "Lieu",
-                                                                                                   "TTFL"])
+        all_nba_stat = pd.concat([get_stat_joueur(idjoueur, START_NBA).to_dataframe(columns=["Nom",
+                                                                                             "Poste",
+                                                                                             "Date",
+                                                                                             "Adversaire",
+                                                                                             "Equipe",
+                                                                                             "Lieu",
+                                                                                             "TTFL"])
                                   for equipe in CD_FRANCHISES
-                                  for idjoueur in ttfls.get_liste_joueurs(equipe)],
+                                  for idjoueur in get_liste_joueurs(equipe)],
                                  sort=False).reset_index(drop=True)
         NB_JOUEURS_MANQUES = len(all_nba_stat[all_nba_stat["Nom"] == ""])
         END_EXTRACT = datetime.now()
         print("\nLe chargement des joueurs est terminé !")
-    
+
         # Calcul des moyennes glissantes
         def calcul_moyenne_glissante(df_stat, nb_jour):
             iter_date = datetime(datetime.now().year, datetime.now().month, datetime.now().day)
@@ -60,6 +75,8 @@ if not EXI or not FMAJ:
                 df_stat.drop(["TTFL_{}_new".format(nb_jour)], axis=1, inplace=True)
                 iter_date -= timedelta(days=1)
             return df_stat
+
+
         all_nba_stat = calcul_moyenne_glissante(all_nba_stat, 30)
         all_nba_stat = calcul_moyenne_glissante(all_nba_stat, 10)
         all_nba_stat.to_csv("{}/all_nba_stat.csv".format(PATH_TO_WRITE), sep=";")
@@ -70,7 +87,7 @@ if not EXI or not FMAJ:
 
     # Chargemet du calendrier
     print("\nChargement du calendrier en cours...")
-    dico_matchs = ttfls.get_liste_match(NB_JOURS_PREDITS)
+    dico_matchs = get_liste_match(NB_JOURS_PREDITS)
     print("Fin du chargement")
 
     print("\nCalcul des prédictions...")
@@ -84,16 +101,24 @@ if not EXI or not FMAJ:
     for dt in dico_matchs.keys():
         calendars[dt] = []
         for match in dico_matchs[dt]:
-            df_dom = last_nba_stat[last_nba_stat["Equipe"] == match[0]]
+            df_dom = last_nba_stat[last_nba_stat["Equipe"] == match[0]].copy()
             df_dom["Adversaire"] = match[1]
             df_dom["Lieu"] = "DOM"
-            df_ext = last_nba_stat[last_nba_stat["Equipe"] == match[1]]
+            df_ext = last_nba_stat[last_nba_stat["Equipe"] == match[1]].copy()
             df_ext["Adversaire"] = match[0]
             df_ext["Lieu"] = "EXT"
             calendars[dt].append(pd.concat([df_dom, df_ext], sort=False)
                                  .reset_index()
                                  .filter(["Nom", "Adversaire", "Poste", "Lieu", "TTFL_30", "TTFL_10"]))
-        calendars[dt] = pd.concat(calendars[dt], sort=False)
+        if len(calendars[dt]) > 0:
+            calendars[dt] = pd.concat(calendars[dt], sort=False)
+        else:
+            calendars[dt] = pd.DataFrame({"Nom": [],
+                                          "Adversaire": [],
+                                          "Poste": [],
+                                          "Lieu": [],
+                                          "TTFL_30": [],
+                                          "TTFL_10": []})
 
     # Calcul du modèle
     data = all_nba_stat[['Nom', 'Adversaire', 'Lieu', 'Poste', 'TTFL', 'TTFL_30', 'TTFL_10']]
@@ -108,7 +133,7 @@ if not EXI or not FMAJ:
     df_matrix = pd.DataFrame(last_nba_stat["Nom"]).set_index("Nom")
     for dt in calendars.keys():
         df_matrix[dt] = 0
-    
+
     for dt in df_matrix.columns:
         for joueur in df_matrix.index:
             # noinspection PyTypeChecker
@@ -116,16 +141,17 @@ if not EXI or not FMAJ:
                 # noinspection PyTypeChecker,PyTypeChecker
                 df_matrix.loc[joueur, dt] = float(reg_30.predict(calendars[dt][calendars[dt]["Nom"] == joueur])) / 2 + \
                                             float(reg_10.predict(calendars[dt][calendars[dt]["Nom"] == joueur])) / 2
-        
+
     # Ecriture du csv
     print("Prédictions terminées => Ecriture dans le fichier csv.")
     df_matrix.to_csv("{}/TTFL.csv".format(PATH_TO_WRITE), sep=";")
     END_EXEC = datetime.now()
 
     # Résumé de l'éxécution 
-    print("\n\n------------------------------------------------------------------------------------------\n"
-          "Temps pour importer les données : {}".format(END_EXTRACT - START_TIME))
-    print("Temps pour calculer les moyennes glissantes : {}".format(END_GLISS - END_EXTRACT))
+    print("\n\n------------------------------------------------------------------------------------------")
+    if END_EXTRACT != 0:
+        print("Temps pour importer les données : {}".format(END_EXTRACT - START_TIME))
+        print("Temps pour calculer les moyennes glissantes : {}".format(END_GLISS - END_EXTRACT))
     print("Nombre de joueurs importés : {}".format(len(all_nba_stat["Nom"].drop_duplicates())))
     print("Nombre de joueurs passés à la trappe : {}".format(NB_JOUEURS_MANQUES))
     print("Soit un total de {} lignes de stat !".format(len(all_nba_stat)))
