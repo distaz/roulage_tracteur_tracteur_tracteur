@@ -126,7 +126,7 @@ def get_stat_joueur(id_joueur, start_nba):
 
             # Score match
             stat = iter_stat.__next__()
-            if stats_match.lieu == "DOM":
+            if stats_match.resultat == "V":
                 stats_match.score_pour = int(stat.split("-")[0])
                 stats_match.score_contre = int(stat.split("-")[1].split(" ")[0])
             else:
