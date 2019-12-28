@@ -139,8 +139,7 @@ if not EXI or not FMAJ:
             # noinspection PyTypeChecker
             if len(calendars[dt][calendars[dt]["Nom"] == joueur]) > 0:
                 # noinspection PyTypeChecker,PyTypeChecker
-                df_matrix.loc[joueur, dt] = float(reg_30.predict(calendars[dt][calendars[dt]["Nom"] == joueur])) / 2 + \
-                                            float(reg_10.predict(calendars[dt][calendars[dt]["Nom"] == joueur])) / 2
+                df_matrix.loc[joueur, dt] = float(reg_30.predict(calendars[dt][calendars[dt]["Nom"] == joueur]))
 
     # Ecriture du csv
     print("Prédictions terminées => Ecriture dans le fichier csv.")
