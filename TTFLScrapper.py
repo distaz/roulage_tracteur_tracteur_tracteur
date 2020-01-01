@@ -115,93 +115,96 @@ def get_stat_joueur(id_joueur, start_nba):
 
             # Adversaire
             stat = iter_stat.__next__()
-            stats_match.adversaire = DICT_FRANCHISE[stat]
-
-            # Résultat match
-            stat = iter_stat.__next__()
-            if stat == "W":
-                stats_match.resultat = "V"
+            if stat not in DICT_FRANCHISE.keys():
+                print("L'équipe {} n'est pas reconnue !".format(stat))
             else:
-                stats_match.resultat = "D"
+                stats_match.adversaire = DICT_FRANCHISE[stat]
 
-            # Score match
-            stat = iter_stat.__next__()
-            if stats_match.resultat == "V":
-                stats_match.score_pour = int(stat.split("-")[0])
-                stats_match.score_contre = int(stat.split("-")[1].split(" ")[0])
-            else:
-                stats_match.score_pour = int(stat.split("-")[1].split(" ")[0])
-                stats_match.score_contre = int(stat.split("-")[0])
+                # Résultat match
+                stat = iter_stat.__next__()
+                if stat == "W":
+                    stats_match.resultat = "V"
+                else:
+                    stats_match.resultat = "D"
 
-            # Temps de jeu
-            stat = iter_stat.__next__()
-            stats_match.temps_jeu = int(stat)
+                # Score match
+                stat = iter_stat.__next__()
+                if stats_match.resultat == "V":
+                    stats_match.score_pour = int(stat.split("-")[0])
+                    stats_match.score_contre = int(stat.split("-")[1].split(" ")[0])
+                else:
+                    stats_match.score_pour = int(stat.split("-")[1].split(" ")[0])
+                    stats_match.score_contre = int(stat.split("-")[0])
 
-            if stats_match.temps_jeu <= 0:
-                continue
+                # Temps de jeu
+                stat = iter_stat.__next__()
+                stats_match.temps_jeu = int(stat)
 
-            # Tirs marques - Tirs tentes
-            stat = iter_stat.__next__()
-            stats_match.tirs_marques = int(stat.split("-")[0])
-            stats_match.tirs_tentes = int(stat.split("-")[1])
+                if stats_match.temps_jeu <= 0:
+                    continue
 
-            # 3pts marques - 3pts tentes
-            iter_stat.__next__()
-            stat = iter_stat.__next__()
-            stats_match.troispts_marques = int(stat.split("-")[0])
-            stats_match.troispts_tentes = int(stat.split("-")[1])
+                # Tirs marques - Tirs tentes
+                stat = iter_stat.__next__()
+                stats_match.tirs_marques = int(stat.split("-")[0])
+                stats_match.tirs_tentes = int(stat.split("-")[1])
 
-            # Lancers francs marques - Lancers francs tentes
-            iter_stat.__next__()
-            stat = iter_stat.__next__()
-            stats_match.lances_marques = int(stat.split("-")[0])
-            stats_match.lances_tentes = int(stat.split("-")[1])
+                # 3pts marques - 3pts tentes
+                iter_stat.__next__()
+                stat = iter_stat.__next__()
+                stats_match.troispts_marques = int(stat.split("-")[0])
+                stats_match.troispts_tentes = int(stat.split("-")[1])
 
-            # Rebonds
-            iter_stat.__next__()
-            stat = iter_stat.__next__()
-            stats_match.rebonds = int(stat)
+                # Lancers francs marques - Lancers francs tentes
+                iter_stat.__next__()
+                stat = iter_stat.__next__()
+                stats_match.lances_marques = int(stat.split("-")[0])
+                stats_match.lances_tentes = int(stat.split("-")[1])
 
-            # Passes Décisives
-            stat = iter_stat.__next__()
-            stats_match.passes = int(stat)
+                # Rebonds
+                iter_stat.__next__()
+                stat = iter_stat.__next__()
+                stats_match.rebonds = int(stat)
 
-            #  Blocs
-            stat = iter_stat.__next__()
-            stats_match.contres = int(stat)
+                # Passes Décisives
+                stat = iter_stat.__next__()
+                stats_match.passes = int(stat)
 
-            # Interceptions
-            stat = iter_stat.__next__()
-            stats_match.interceptions = int(stat)
+                #  Blocs
+                stat = iter_stat.__next__()
+                stats_match.contres = int(stat)
 
-            # Fautes
-            stat = iter_stat.__next__()
-            stats_match.fautes = int(stat)
+                # Interceptions
+                stat = iter_stat.__next__()
+                stats_match.interceptions = int(stat)
 
-            # Pertes de balles
-            stat = iter_stat.__next__()
-            stats_match.balles_perdues = int(stat)
+                # Fautes
+                stat = iter_stat.__next__()
+                stats_match.fautes = int(stat)
 
-            # Points
-            stat = iter_stat.__next__()
-            stats_match.points = int(stat)
+                # Pertes de balles
+                stat = iter_stat.__next__()
+                stats_match.balles_perdues = int(stat)
 
-            # Score TTFL
-            stats_match.ttfl_score = int(stats_match.points
-                                         + stats_match.rebonds
-                                         + stats_match.passes
-                                         + stats_match.contres
-                                         + stats_match.interceptions
-                                         + 2 * stats_match.lances_marques
-                                         + 2 * stats_match.troispts_marques
-                                         + 2 * stats_match.tirs_marques
-                                         - stats_match.lances_tentes
-                                         - stats_match.troispts_tentes
-                                         - stats_match.tirs_tentes
-                                         - stats_match.balles_perdues)
+                # Points
+                stat = iter_stat.__next__()
+                stats_match.points = int(stat)
 
-            # Ajout de la ligne de stat à la liste
-            joueur.liste_matchs.append(stats_match)
+                # Score TTFL
+                stats_match.ttfl_score = int(stats_match.points
+                                             + stats_match.rebonds
+                                             + stats_match.passes
+                                             + stats_match.contres
+                                             + stats_match.interceptions
+                                             + 2 * stats_match.lances_marques
+                                             + 2 * stats_match.troispts_marques
+                                             + 2 * stats_match.tirs_marques
+                                             - stats_match.lances_tentes
+                                             - stats_match.troispts_tentes
+                                             - stats_match.tirs_tentes
+                                             - stats_match.balles_perdues)
+
+                # Ajout de la ligne de stat à la liste
+                joueur.liste_matchs.append(stats_match)
 
     try:
         if joueur.nom != "":
